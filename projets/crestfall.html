@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crestfall — Théo Springer</title>
+  <meta name="description" content="Étude de cas : Crestfall, un RPG au tour par tour en Java, terrain d'entraînement pour la programmation orientée objet.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="../index.html" class="brand"><span class="dot"></span>Théo Springer</a>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="../index.html#projets">Projets</a>
+        <a href="../about.html">À propos</a>
+        <a href="../parcours.html">Parcours</a>
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
+      </div>
+      <button class="burger" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="article">
+    <div class="wrap">
+      <a href="../index.html#projets" class="back-link mono">← Tous les projets</a>
+
+      <div class="reveal">
+        <span class="kicker mono">// PROJET 03 · RPG AU TOUR PAR TOUR</span>
+        <h1>Crestfall</h1>
+        <p class="subtitle">Un jeu de rôle en console avec cinq classes jouables, un système de combat, un inventaire et un butin à raretés. Le projet où j'ai vraiment maîtrisé la programmation orientée objet.</p>
+      </div>
+
+      <div class="meta-bar reveal">
+        <div class="item"><div class="k">Langage</div><div class="v">Java</div></div>
+        <div class="item"><div class="k">Domaine</div><div class="v">POO · conception de jeu</div></div>
+        <div class="item"><div class="k">Concepts</div><div class="v">Héritage · polymorphisme · enums</div></div>
+        <div class="item"><div class="k">Liens</div><div class="v"><a href="https://github.com/Theo-Springer/Crestfall" target="_blank" rel="noopener" class="accent">Code ↗</a></div></div>
+      </div>
+
+      <div class="prose reveal">
+        <h2>Le projet</h2>
+        <p>Crestfall est un RPG jouable au clavier. Le joueur choisit une classe (Machiniste, Pistolero, Spectre, Briseur ou Archaniste), puis enchaîne des combats au tour par tour, gagne de l'expérience, ramasse des objets et affronte des ennemis générés selon la zone.</p>
+        <p>Un jeu de ce type est un terrain d'entraînement parfait pour la POO. Un ennemi et un joueur partagent les mêmes bases (des points de vie, une attaque, une défense) mais se comportent différemment. C'est exactement ce que l'héritage et le polymorphisme servent à modéliser.</p>
+
+        <h2>Une base commune : la classe Entite</h2>
+        <p>Toutes les créatures du jeu, joueur comme ennemis, héritent d'une classe <code>Entite</code>. Elle regroupe les statistiques et les comportements partagés. Voici la montée de niveau, qui gère proprement le cas où un gros gain d'expérience fait grimper plusieurs niveaux d'un coup.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">src/entites/Entite.java</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-java">public void gagnerExperience(int exp) {
+    this.experience += exp;
+
+    // Une seule victoire peut faire monter PLUSIEURS niveaux : d'où le while
+    while (this.experience &gt;= this.expMax) {
+        this.experience -= this.expMax;
+        this.expMax += 50;      // chaque palier coûte plus cher que le précédent
+        this.niveau++;
+        this.hpMax   += 10;     // les stats progressent à chaque niveau
+        this.attaque += 2;
+        this.defense += 1;
+        this.hp = this.hpMax;   // soin complet en récompense
+        System.out.println(this.nom + " a atteint le niveau " + this.niveau + " !");
+    }
+}</code></pre>
+        </div>
+
+        <div class="code-note"><strong>À retenir :</strong> Le <code>while</code> plutôt qu'un simple <code>if</code> est un choix conscient : si l'ennemi rapporte 300 XP et qu'il en faut 100 par palier, la boucle enchaîne les niveaux tant que le seuil est franchi. Un <code>if</code> aurait « perdu » l'excédent.</div>
+
+        <h2>Le polymorphisme en action</h2>
+        <p>Chaque classe jouable a ses propres capacités spéciales. Le moteur de combat n'a pas besoin de les connaître à l'avance : il interroge le <em>type réel</em> du joueur au moment d'agir et déclenche la bonne capacité.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">src/Combat.java</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-java">// Le combat ne code pas "en dur" une classe : il s'adapte au personnage joué
+private void attaqueSpeciale1() {
+    if      (joueur instanceof Machiniste) ((Machiniste) joueur).TourelleAutonome(ennemi);
+    else if (joueur instanceof Pistolero)  ((Pistolero)  joueur).TirDePrecision(ennemi);
+    else if (joueur instanceof Spectre)    ((Spectre)    joueur).FrappeDansLombre(ennemi, tour);
+    else if (joueur instanceof Briseur)    ((Briseur)    joueur).FrappePhenomenale(ennemi);
+    else if (joueur instanceof Archaniste) ((Archaniste) joueur).DechargeArchanique(ennemi);
+    else System.out.println("  Cette entité n'a pas d'attaque spéciale 1.");
+}</code></pre>
+        </div>
+
+        <div class="code-note"><strong>Le raisonnement :</strong> Chaque classe (Machiniste, Pistolero…) étend <code>Entite</code> et ajoute ses propres méthodes. Grâce à <code>instanceof</code>, un même bouton « Spéciale 1 » déclenche une action totalement différente selon le personnage. Ajouter une nouvelle classe ne casse rien : il suffit d'une branche de plus.</div>
+
+        <h2>Enums et streams pour le butin</h2>
+        <p>Les objets ont une rareté, et chaque rareté porte son propre taux d'apparition. J'ai modélisé ça avec un <code>enum</code>, puis filtré le butin possible avec l'API Stream de Java.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">src/Combat.java</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-java">private void genererLoot(Inventaire inventaire) {
+    double roll = Math.random();
+
+    // La rareté est tirée selon les taux portés par l'enum lui-même
+    Objet.Rarete rarete;
+    if      (roll &lt; Objet.Rarete.EPIQUE.taux)                               rarete = Objet.Rarete.EPIQUE;
+    else if (roll &lt; Objet.Rarete.RARE.taux + Objet.Rarete.EPIQUE.taux)      rarete = Objet.Rarete.RARE;
+    else                                                                    rarete = Objet.Rarete.COMMUN;
+
+    // On ne garde que les objets de la rareté tirée, puis on en choisit un au hasard
+    List&lt;Objet&gt; possibles = ObjetCree.OBJET.values().stream()
+            .filter(o -&gt; o.rarete == rarete)
+            .collect(Collectors.toList());
+
+    Objet drop = possibles.get(new Random().nextInt(possibles.size()));
+    inventaire.ajouter(drop.id);
+}</code></pre>
+        </div>
+
+        <div class="code-note"><strong>À retenir :</strong> Stocker le taux de drop <em>dans</em> l'enum garde la logique au bon endroit : le jour où j'équilibre le jeu, je change une valeur, pas dix conditions. Le <code>stream().filter().collect()</code> exprime « donne-moi les objets de cette rareté » en une ligne lisible.</div>
+
+        <h2>Ce que j'en retiens</h2>
+        <p>Crestfall a fait passer la POO de la théorie à la pratique. Héritage pour factoriser le commun, polymorphisme pour spécialiser le comportement, enums pour donner du sens aux données, streams pour manipuler des collections proprement. C'est aussi le projet qui m'a appris à découper un programme en fichiers cohérents plutôt qu'en un seul bloc.</p>
+        <div class="chips">
+          <span class="chip">Java</span><span class="chip">Héritage</span><span class="chip">Polymorphisme</span><span class="chip">Enums</span><span class="chip">Java Streams</span><span class="chip">Architecture de classes</span>
+        </div>
+      </div>
+
+      <div class="hero-actions reveal" style="margin-top:52px;">
+        <a href="csv-analyst.html" class="btn btn-primary">Projet suivant : CSV Analyst →</a>
+        <a href="../index.html#projets" class="btn btn-ghost">Tous les projets</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="muted">© 2026 Théo Springer</span>
+      <div class="socials">
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:theo.springer.iut@gmail.com">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

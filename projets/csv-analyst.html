@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV Analyst — Théo Springer</title>
+  <meta name="description" content="Étude de cas : CSV Analyst, un dashboard d'analyse de données en Python, Pandas et Streamlit.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="../index.html" class="brand"><span class="dot"></span>Théo Springer</a>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="../index.html#projets">Projets</a>
+        <a href="../about.html">À propos</a>
+        <a href="../parcours.html">Parcours</a>
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
+      </div>
+      <button class="burger" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="article">
+    <div class="wrap">
+      <a href="../index.html#projets" class="back-link mono">← Tous les projets</a>
+
+      <div class="reveal">
+        <span class="kicker mono">// PROJET 04 · DATA</span>
+        <h1>CSV Analyst</h1>
+        <p class="subtitle">Un outil qui transforme un fichier CSV brut en analyse statistique exploitable en quelques secondes, sans écrire une seule ligne de code côté utilisateur.</p>
+      </div>
+
+      <div class="meta-bar reveal">
+        <div class="item"><div class="k">Stack</div><div class="v">Python 3 · Pandas · Streamlit</div></div>
+        <div class="item"><div class="k">Domaine</div><div class="v">Analyse & visualisation de données</div></div>
+        <div class="item"><div class="k">Interface</div><div class="v">Dashboard web</div></div>
+        <div class="item"><div class="k">Liens</div><div class="v"><a href="https://github.com/Theo-Springer/CSV-Analyst" target="_blank" rel="noopener" class="accent">Code ↗</a></div></div>
+      </div>
+
+      <div class="prose reveal">
+        <h2>Le projet</h2>
+        <p>CSV Analyst comble le vide entre un tableur Excel rigide et un script de data science complexe. L'idée : n'importe qui charge un jeu de données, en comprend la structure statistique et le visualise, sans compétence technique. L'outil calcule tout seul la moyenne, la médiane, les extrêmes et l'écart-type, et repère les valeurs manquantes.</p>
+        <p>Pour moi, c'était l'occasion de manipuler des données réelles avec <strong>Pandas</strong> et de construire une interface dynamique en Python pur grâce à <strong>Streamlit</strong>.</p>
+
+        <h2>Une interface qui réagit à l'état</h2>
+        <p>La force de Streamlit, c'est son modèle « réactif » : le script se ré-exécute à chaque interaction, et l'affichage se recompose en fonction de l'état courant. Ici, toute l'analyse est conditionnée à la présence d'un fichier.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">app.py</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-python">import streamlit as st
+import pandas as pd
+from src.processor import get_stats   # logique de calcul isolée dans son module
+
+st.set_page_config(page_title="CSV Analyst", layout="wide")
+st.title("📊 CSV Analyst")
+
+# Import du fichier dans la barre latérale
+with st.sidebar:
+    uploaded_file = st.file_uploader("Importer un fichier CSV", type="csv")
+
+# Tant qu'aucun fichier n'est chargé, on n'analyse rien
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.success(f"Fichier '{uploaded_file.name}' chargé avec succès !")
+
+    # Le curseur pilote directement le nombre de lignes affichées
+    rows = st.slider("Nombre de lignes à voir", 5, len(df), 10)
+    st.dataframe(df.head(rows), use_container_width=True)
+
+    # Une seule ligne de Pandas produit toutes les stats descriptives
+    st.subheader("📈 Statistiques automatiques")
+    st.write(df.describe())
+else:
+    st.warning("Veuillez importer un fichier CSV pour commencer.")</code></pre>
+        </div>
+
+        <div class="code-note"><strong>À retenir :</strong> Le <code>if uploaded_file is not None</code> est le pivot de l'app : il sépare nettement l'état « en attente » de l'état « analyse ». Tout ce qui suit ne s'exécute que lorsqu'un fichier existe, ce qui évite les erreurs et garde l'interface claire.</div>
+
+        <p>Deux détails que je trouve élégants dans ce code court : <code>df.describe()</code> qui, en un appel, sort moyenne, écart-type, quartiles et extrêmes de chaque colonne numérique ; et le <code>st.slider</code> dont la valeur alimente directement <code>df.head(rows)</code>, si bien que déplacer le curseur met à jour le tableau instantanément.</p>
+
+        <h2>Séparer l'affichage du calcul</h2>
+        <p>J'ai volontairement sorti la logique de calcul dans un module <code>src/processor.py</code>, importé en haut du fichier. L'interface (<code>app.py</code>) se concentre sur l'affichage ; le traitement des données vit ailleurs. Cette séparation rend chaque partie testable et réutilisable indépendamment.</p>
+
+        <h2>Ce que j'en retiens</h2>
+        <p>Ce projet m'a appris à penser « donnée » : lire un CSV, en inspecter la structure, produire des indicateurs pertinents. Il m'a aussi montré qu'on peut livrer une vraie interface web utile sans quitter Python, à condition de bien séparer les responsabilités entre le calcul et la présentation.</p>
+        <div class="chips">
+          <span class="chip">Python 3</span><span class="chip">Pandas</span><span class="chip">Streamlit</span><span class="chip">Analyse de données</span><span class="chip">Séparation des responsabilités</span>
+        </div>
+      </div>
+
+      <div class="hero-actions reveal" style="margin-top:52px;">
+        <a href="2048.html" class="btn btn-primary">Projet suivant : 2048 →</a>
+        <a href="../index.html#projets" class="btn btn-ghost">Tous les projets</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="muted">© 2026 Théo Springer</span>
+      <div class="socials">
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:theo.springer.iut@gmail.com">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

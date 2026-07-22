@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rewind Insights — Théo Springer</title>
+  <meta name="description" content="Étude de cas : Rewind Insights, un SaaS d'audit web en Next.js et TypeScript, déployé en production.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="../index.html" class="brand"><span class="dot"></span>Théo Springer</a>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="../index.html#projets">Projets</a>
+        <a href="../about.html">À propos</a>
+        <a href="../parcours.html">Parcours</a>
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
+      </div>
+      <button class="burger" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="article">
+    <div class="wrap">
+      <a href="../index.html#projets" class="back-link mono">← Tous les projets</a>
+
+      <div class="reveal">
+        <span class="kicker mono">// PROJET 01 · SAAS DÉPLOYÉ</span>
+        <h1>Rewind Insights</h1>
+        <p class="subtitle">Un outil d'audit web gratuit qui note la performance, le SEO et l'accessibilité de n'importe quel site en moins d'une minute, sans inscription.</p>
+      </div>
+
+      <div class="meta-bar reveal">
+        <div class="item"><div class="k">Stack</div><div class="v">Next.js 16 · TypeScript · Supabase</div></div>
+        <div class="item"><div class="k">Rôle</div><div class="v">Conception & développement full-stack</div></div>
+        <div class="item"><div class="k">Statut</div><div class="v">En production</div></div>
+        <div class="item"><div class="k">Liens</div><div class="v"><a href="https://rewind-insights.vercel.app/" target="_blank" rel="noopener" class="accent">Démo ↗</a> · <a href="https://github.com/Theo-Springer/audit-saas" target="_blank" rel="noopener" class="accent">Code ↗</a></div></div>
+      </div>
+
+      <div class="prose reveal">
+        <h2>Le projet</h2>
+        <p>Rewind Insights répond à un besoin simple : donner à n'importe qui un diagnostic clair de son site web, sans jargon ni compte à créer. On saisit une URL, l'outil interroge les métriques officielles de Google et renvoie un score sur 100 réparti sur trois axes (vitesse, SEO, expérience utilisateur), puis envoie un rapport par email.</p>
+        <p>Derrière cette simplicité apparente, le projet touche à toute la chaîne : une API Next.js côté serveur, une intégration à un service tiers (Google PageSpeed), une base de données PostgreSQL via Supabase, et un envoi d'emails transactionnels. C'est mon projet le plus complet, celui qui m'a le plus appris sur la mise en production.</p>
+
+        <h2>Le cœur : la route d'audit</h2>
+        <p>Tout part d'une route API qui reçoit une requête <code>POST</code>. Voici l'extrait clé, celui qui interroge Google et transforme sa réponse en un score exploitable.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">src/app/api/audit/route.ts</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-typescript">export async function POST(request: Request) {
+  const { email, url } = await request.json();
+
+  // Validation défensive avant tout appel réseau
+  if (!url)   return NextResponse.json({ error: 'Champ "url" manquant' },   { status: 400 });
+  if (!email) return NextResponse.json({ error: 'Champ "email" manquant' }, { status: 400 });
+
+  // Appel à l'API PageSpeed Insights de Google (stratégie mobile)
+  const psUrl =
+    `https://www.googleapis.com/pagespeedonline/v5/runPagespeed` +
+    `?url=${encodeURIComponent(url)}` +
+    `&amp;strategy=mobile&amp;key=${process.env.PAGESPEED_API_KEY}` +
+    `&amp;category=PERFORMANCE&amp;category=SEO&amp;category=ACCESSIBILITY`;
+
+  const psRes = await fetch(psUrl);
+  if (!psRes.ok) {
+    const raw = await psRes.text();
+    return NextResponse.json(
+      { error: 'PageSpeed erreur HTTP', http_status: psRes.status, response_body: raw.slice(0, 600) },
+      { status: 500 }
+    );
+  }
+
+  const psData = await psRes.json();
+  const cats = psData?.lighthouseResult?.categories;
+
+  // On mappe les 3 catégories Lighthouse en un score /100
+  const scores = {
+    speed: Math.round((cats.performance?.score   ?? 0) * 100),
+    seo:   Math.round((cats.seo?.score           ?? 0) * 100),
+    ux:    Math.round((cats.accessibility?.score ?? 0) * 100),
+  };
+  // ...
+}</code></pre>
+        </div>
+
+        <div class="code-note"><strong>À retenir :</strong> Une réponse d'API externe n'est jamais garantie. Le <code>?.</code> (chaînage optionnel) et le <code>?? 0</code> (coalescence des nuls) protègent chaque accès : si Google change son format ou renvoie une catégorie vide, le code ne plante pas, il retombe sur une valeur sûre.</div>
+
+        <p>Chaque cas d'échec renvoie un code HTTP juste (<code>400</code> pour une saisie invalide, <code>500</code> pour une panne externe) avec un message lisible. Quand quelque chose casse, ce message me dit où regarder.</p>
+
+        <h2>Ne jamais perdre un lead</h2>
+        <p>Une fois les scores calculés, deux choses doivent arriver : enregistrer le contact en base et lui envoyer son rapport. J'ai fait un choix délibéré sur l'ordre et la gestion d'erreur.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">src/app/api/audit/route.ts</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-typescript">// 1. On sauvegarde le lead AVANT d'envoyer l'email
+const { data, error: sbError } = await supabase
+  .from('leads')
+  .insert([{ email, url_site: url, scores, statut: 'done' }])
+  .select('id')
+  .single();
+
+if (sbError) console.error('[audit] Échec insertion Supabase :', sbError.message);
+
+// 2. L'envoi d'email est NON BLOQUANT :
+//    si le SMTP tombe, le lead est déjà sauvé, on log sans crasher
+try {
+  await sendAuditEmail({ email, url, scores });
+} catch (e) {
+  console.error('[audit] Échec envoi email :', e);
+}
+
+return NextResponse.json({ success: true, scores }, { status: 201 });</code></pre>
+        </div>
+
+        <div class="code-note"><strong>Le raisonnement :</strong> L'email peut échouer pour mille raisons hors de mon contrôle. En sauvegardant le contact d'abord, puis en isolant l'envoi dans un <code>try/catch</code>, un problème de messagerie ne fait jamais perdre une donnée client.</div>
+
+        <h2>Ce que j'en retiens</h2>
+        <p>Ce projet m'a fait passer du « ça tourne sur mon PC » au « ça tourne pour de vrais utilisateurs ». J'y ai appris à gérer des variables d'environnement, à découper le code en modules réutilisables (un client Supabase, un module d'envoi d'email), et surtout à écrire du code défensif : anticiper ce qui peut mal tourner plutôt que de croiser les doigts.</p>
+        <div class="chips">
+          <span class="chip">Next.js App Router</span><span class="chip">API Routes</span><span class="chip">TypeScript</span><span class="chip">Supabase / PostgreSQL</span><span class="chip">Intégration API tierce</span><span class="chip">Gestion d'erreur</span>
+        </div>
+      </div>
+
+      <div class="hero-actions reveal" style="margin-top:52px;">
+        <a href="campuslocal.html" class="btn btn-primary">Projet suivant : CampusLocal →</a>
+        <a href="../index.html#projets" class="btn btn-ghost">Tous les projets</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="muted">© 2026 Théo Springer</span>
+      <div class="socials">
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:theo.springer.iut@gmail.com">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

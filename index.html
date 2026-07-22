@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Théo Springer — Développeur</title>
+  <meta name="description" content="Portfolio de Théo Springer, développeur. Projets full-stack, applications Python, jeux Java. Basé en France.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="index.html" class="brand"><span class="dot"></span>Théo Springer</a>
+      <div class="nav-links">
+        <a href="index.html" class="active">Accueil</a>
+        <a href="index.html#projets">Projets</a>
+        <a href="about.html">À propos</a>
+        <a href="parcours.html">Parcours</a>
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
+      </div>
+      <button class="burger" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="eyebrow mono">DÉVELOPPEUR · FRANCE</div>
+        <h1>Je conçois des applications<br><span class="grey">du back au front.</span></h1>
+        <p class="lead">Du SaaS déployé en production aux moteurs de jeu en Java, en passant par l'analyse de données en Python. J'aime comprendre un problème en profondeur avant d'écrire la première ligne.</p>
+        <div class="hero-actions">
+          <a href="index.html#projets" class="btn btn-primary">Voir mes projets</a>
+          <a href="about.html" class="btn btn-ghost">Qui je suis →</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PROJETS -->
+  <section class="section" id="projets">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="kicker mono">// SÉLECTION</span>
+        <h2>Projets</h2>
+        <p>Chaque projet a sa page dédiée : contexte, choix techniques et extraits de code réels commentés ligne à ligne.</p>
+      </div>
+
+      <div class="grid">
+
+        <a href="projets/rewind-insights.html" class="card reveal">
+          <span class="idx mono">01</span>
+          <h3>Rewind Insights</h3>
+          <div class="role mono">SaaS d'audit web · déployé</div>
+          <p>Un outil qui note la performance, le SEO et l'accessibilité d'un site en moins d'une minute. API PageSpeed de Google, stockage Supabase, rapport envoyé par email.</p>
+          <div class="tags">
+            <span class="tag">Next.js 16</span><span class="tag">TypeScript</span><span class="tag">Supabase</span><span class="tag">Cheerio</span>
+          </div>
+          <span class="go">Lire l'étude <span class="arrow">→</span></span>
+        </a>
+
+        <a href="projets/campuslocal.html" class="card reveal">
+          <span class="idx mono">02</span>
+          <h3>CampusLocal</h3>
+          <div class="role mono">Réseau social de campus · monorepo</div>
+          <p>Un réseau social type Instagram pour les communautés étudiantes. Backend FastAPI, deux frontends React, le tout orchestré par un script de lancement multi-OS.</p>
+          <div class="tags">
+            <span class="tag">FastAPI</span><span class="tag">React</span><span class="tag">Monorepo</span><span class="tag">Docker</span>
+          </div>
+          <span class="go">Lire l'étude <span class="arrow">→</span></span>
+        </a>
+
+        <a href="projets/crestfall.html" class="card reveal">
+          <span class="idx mono">03</span>
+          <h3>Crestfall</h3>
+          <div class="role mono">RPG au tour par tour · Java</div>
+          <p>Un jeu de rôle en console avec cinq classes jouables, un système de combat, un inventaire et un loot à raretés. Un terrain d'entraînement idéal pour la POO.</p>
+          <div class="tags">
+            <span class="tag">Java</span><span class="tag">POO</span><span class="tag">Polymorphisme</span>
+          </div>
+          <span class="go">Lire l'étude <span class="arrow">→</span></span>
+        </a>
+
+        <a href="projets/csv-analyst.html" class="card reveal">
+          <span class="idx mono">04</span>
+          <h3>CSV Analyst</h3>
+          <div class="role mono">Dashboard de données · Python</div>
+          <p>Un tableau de bord qui transforme un CSV brut en analyse statistique en quelques secondes, sans écrire une ligne de code côté utilisateur.</p>
+          <div class="tags">
+            <span class="tag">Python</span><span class="tag">Pandas</span><span class="tag">Streamlit</span>
+          </div>
+          <span class="go">Lire l'étude <span class="arrow">→</span></span>
+        </a>
+
+        <a href="projets/2048.html" class="card reveal">
+          <span class="idx mono">05</span>
+          <h3>2048</h3>
+          <div class="role mono">Jeu de puzzle · algorithmique</div>
+          <p>Le classique 2048, reconstruit from scratch. Une astuce mathématique élégante : les quatre directions dérivent toutes d'un seul mouvement, par transposition et symétrie.</p>
+          <div class="tags">
+            <span class="tag">Python</span><span class="tag">Matrices</span><span class="tag">Terminale</span>
+          </div>
+          <span class="go">Lire l'étude <span class="arrow">→</span></span>
+        </a>
+
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="card reveal">
+          <span class="idx mono">+</span>
+          <h3>Tout le reste</h3>
+          <div class="role mono">Sur GitHub</div>
+          <p>Sites vitrines, expérimentations et projets plus anciens. L'intégralité du code source est publique et consultable.</p>
+          <div class="tags"><span class="tag">8 dépôts publics</span></div>
+          <span class="go">Ouvrir GitHub <span class="arrow">↗</span></span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT TEASER -->
+  <section class="section">
+    <div class="wrap">
+      <div class="split">
+        <div class="stack reveal">
+          <span class="kicker mono">// QUI JE SUIS</span>
+          <h2>Curieux de la machine,<br>rigoureux sur le code.</h2>
+          <p>Je m'intéresse à ce qui se passe sous le capot : le chemin d'une requête, ou pourquoi une structure de données en bat une autre en vitesse. Je varie les projets pour toucher un maximum de langages et de façons de penser le code.</p>
+          <div><a href="about.html" class="btn btn-ghost">En savoir plus →</a></div>
+        </div>
+        <div class="reveal">
+          <div class="callout">
+            <div class="stat-row">
+              <div class="stat"><div class="n">5+</div><div class="l mono">langages</div></div>
+              <div class="stat"><div class="n">8</div><div class="l mono">dépôts publics</div></div>
+              <div class="stat"><div class="n">2</div><div class="l mono">apps déployées</div></div>
+            </div>
+            <p style="margin-top:26px;">Maîtrisé : Python · JavaScript · TypeScript · Java · HTML/CSS. Puis React, Vue, FastAPI, Pandas, Docker… du front réactif à l'API, en passant par la data et le jeu vidéo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PARCOURS TEASER -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="kicker mono">// FORMATION</span>
+        <h2>Mon plan d'études</h2>
+        <p>De la Terminale à aujourd'hui, un parcours orienté vers le développement logiciel et l'ingénierie. Le détail complet, étape par étape, est sur une page dédiée.</p>
+        <div style="margin-top:22px;"><a href="parcours.html" class="btn btn-ghost">Voir le parcours →</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact-band" id="contact">
+    <div class="wrap reveal">
+      <span class="kicker mono">// CONTACT</span>
+      <h2>Travaillons ensemble.</h2>
+      <p>Une opportunité, un projet, une question sur mon code ? Ma boîte mail est ouverte.</p>
+      <div class="hero-actions" style="justify-content:center;">
+        <a href="mailto:theo.springer.iut@gmail.com?subject=Contact%20via%20votre%20portfolio" class="btn btn-primary">M'écrire</a>
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="btn btn-ghost">GitHub ↗</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="muted">© 2026 Théo Springer</span>
+      <div class="socials">
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:theo.springer.iut@gmail.com">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusLocal — Théo Springer</title>
+  <meta name="description" content="Étude de cas : CampusLocal, un réseau social de campus en architecture monorepo (FastAPI + React).">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="../index.html" class="brand"><span class="dot"></span>Théo Springer</a>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="../index.html#projets">Projets</a>
+        <a href="../about.html">À propos</a>
+        <a href="../parcours.html">Parcours</a>
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
+      </div>
+      <button class="burger" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="article">
+    <div class="wrap">
+      <a href="../index.html#projets" class="back-link mono">← Tous les projets</a>
+
+      <div class="reveal">
+        <span class="kicker mono">// PROJET 02 · MONOREPO FULL-STACK</span>
+        <h1>CampusLocal</h1>
+        <p class="subtitle">Un réseau social type Instagram pour les communautés étudiantes : un backend, deux frontends, et un seul dépôt pour tout orchestrer.</p>
+      </div>
+
+      <div class="meta-bar reveal">
+        <div class="item"><div class="k">Stack</div><div class="v">FastAPI (Python) · React · Vite</div></div>
+        <div class="item"><div class="k">Architecture</div><div class="v">Monorepo · npm workspaces</div></div>
+        <div class="item"><div class="k">Statut</div><div class="v">Prototype · exécuté en local</div></div>
+        <div class="item"><div class="k">Liens</div><div class="v"><a href="https://github.com/Theo-Springer/CampusLocal" target="_blank" rel="noopener" class="accent">Code ↗</a></div></div>
+      </div>
+
+      <div class="prose reveal">
+        <h2>Le projet</h2>
+        <p>CampusLocal est mon projet le plus ambitieux en volume. C'est un réseau social complet organisé en <strong>monorepo</strong> : un seul dépôt qui contient un backend en FastAPI, un frontend « officiel » et un frontend « démo » autonome, le tout géré par les workspaces npm.</p>
+        <p>Je ne l'ai jamais déployé en production : c'était un banc d'essai personnel pour explorer une architecture full-stack complète, aujourd'hui en pause. Ce que je montre ici, c'est donc la conception et le code, pas un produit fini.</p>
+        <p>Écrire trois services, ce n'est que la moitié du travail. Les faire démarrer ensemble d'une seule commande, sur Windows comme sur Mac ou Linux, sans que celui qui clone le dépôt ait à lire trois pages de documentation : voilà le vrai défi. C'est le rôle de mon script de lancement.</p>
+
+        <h2>Un lanceur qui parle à toutes les machines</h2>
+        <p>Avant de démarrer quoi que ce soit, le script vérifie que l'environnement est prêt. Il tolère les différences entre systèmes : par exemple, Python s'appelle <code>python</code> sur Windows mais souvent <code>python3</code> sur Mac et Linux.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">launch.js</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-javascript">function checkPrerequisites() {
+  logSection('🔍 Vérification des prérequis');
+
+  // Node.js est indispensable : sans lui, on arrête tout de suite
+  try {
+    const nodeVersion = execSync('node --version').toString().trim();
+    log(`✅ Node.js: ${nodeVersion}`, 'green');
+  } catch (e) {
+    log('❌ Node.js introuvable !', 'red');
+    process.exit(1);
+  }
+
+  // Python : on tente 'python', puis on retombe sur 'python3'
+  try {
+    const py = execSync('python --version').toString().trim();
+    log(`✅ Python: ${py}`, 'green');
+  } catch (e) {
+    try {
+      const py = execSync('python3 --version').toString().trim();
+      log(`✅ Python: ${py}`, 'green');
+    } catch (e2) {
+      log('⚠️  Python introuvable (nécessaire au backend)', 'yellow');
+    }
+  }
+}</code></pre>
+        </div>
+
+        <div class="code-note"><strong>À retenir :</strong> Un outil de développement doit être robuste face à l'environnement de celui qui l'utilise. Le double <code>try/catch</code> imbriqué gère élégamment le cas « python vs python3 » sans supposer sur quel OS on se trouve.</div>
+
+        <h2>Trois services, un seul Ctrl+C</h2>
+        <p>Une fois les prérequis validés, le script lance les trois services <em>en parallèle</em> et surveille chacun. Il affiche ensuite un tableau de bord clair des URL disponibles.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">launch.js</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-javascript">function startService(name, command, cwd, port) {
+  return new Promise((resolve) => {
+    log(`🚀 Démarrage de ${name} sur le port ${port}...`, 'yellow');
+
+    const service = spawn('npm', ['run', command], { cwd, shell: true, stdio: 'inherit' });
+
+    service.on('error', (err) => { log(`❌ ${name}: ${err.message}`, 'red'); resolve(); });
+    service.on('exit',  (code) => { if (code !== 0) log(`❌ ${name} a quitté (code ${code})`, 'red'); resolve(); });
+  });
+}
+
+// Les 3 services démarrent ensemble, sans se bloquer les uns les autres
+services.forEach(service => startService(service.name, service.command, service.dir, service.port));
+
+// Un seul Ctrl+C arrête proprement tout l'ensemble
+process.on('SIGINT', () => {
+  log('\n👋 Arrêt de tous les services...', 'cyan');
+  process.exit(0);
+});</code></pre>
+        </div>
+
+        <div class="code-note"><strong>Le raisonnement :</strong> Chaque service est lancé dans un processus enfant (<code>spawn</code>) enveloppé dans une <code>Promise</code>, ce qui permet de tous les démarrer sans attendre. L'écoute de <code>SIGINT</code> remplace « je ferme mes trois terminaux à la main » par un simple Ctrl+C.</div>
+
+        <h2>Ce que j'en retiens</h2>
+        <p>CampusLocal m'a confronté à l'organisation d'un vrai projet à plusieurs briques. J'ai appris à structurer un monorepo, à faire cohabiter un backend Python et des frontends JavaScript, et à rendre le projet simple à lancer pour qui le découvre. Le frontend démo tourne même sans backend, pour qu'on puisse le tester en dix secondes.</p>
+        <div class="chips">
+          <span class="chip">Architecture monorepo</span><span class="chip">FastAPI</span><span class="chip">React + Vite</span><span class="chip">npm workspaces</span><span class="chip">Scripting Node</span><span class="chip">Multi-plateforme</span>
+        </div>
+      </div>
+
+      <div class="hero-actions reveal" style="margin-top:52px;">
+        <a href="crestfall.html" class="btn btn-primary">Projet suivant : Crestfall →</a>
+        <a href="../index.html#projets" class="btn btn-ghost">Tous les projets</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="muted">© 2026 Théo Springer</span>
+      <div class="socials">
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:theo.springer.iut@gmail.com">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

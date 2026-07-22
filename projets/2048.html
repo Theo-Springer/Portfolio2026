@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2048 — Théo Springer</title>
+  <meta name="description" content="Étude de cas : le jeu 2048 reconstruit en Python, avec une astuce mathématique pour dériver les 4 directions d'un seul mouvement.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="../index.html" class="brand"><span class="dot"></span>Théo Springer</a>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="../index.html#projets">Projets</a>
+        <a href="../about.html">À propos</a>
+        <a href="../parcours.html">Parcours</a>
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
+      </div>
+      <button class="burger" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="article">
+    <div class="wrap">
+      <a href="../index.html#projets" class="back-link mono">← Tous les projets</a>
+
+      <div class="reveal">
+        <span class="kicker mono">// PROJET 05 · ALGORITHMIQUE</span>
+        <h1>2048</h1>
+        <p class="subtitle">Le célèbre jeu de puzzle, reconstruit from scratch en Python. Derrière la grille se cache une astuce mathématique que je trouve particulièrement élégante.</p>
+      </div>
+
+      <div class="meta-bar reveal">
+        <div class="item"><div class="k">Langage</div><div class="v">Python</div></div>
+        <div class="item"><div class="k">Domaine</div><div class="v">Algorithmique · manipulation de matrices</div></div>
+        <div class="item"><div class="k">Contexte</div><div class="v">Projet de fin d'année de Terminale</div></div>
+        <div class="item"><div class="k">Liens</div><div class="v"><a href="https://github.com/Theo-Springer/2048-projet" target="_blank" rel="noopener" class="accent">Code ↗</a></div></div>
+      </div>
+
+      <div class="prose reveal">
+        <h2>Le projet</h2>
+        <p>2048 se joue sur une grille où l'on pousse les tuiles dans quatre directions ; les tuiles de même valeur fusionnent et doublent. Le réflexe naïf serait d'écrire quatre algorithmes séparés, un par flèche. C'est long, répétitif et propice aux bugs.</p>
+        <p>La bonne idée, c'est de remarquer que les quatre déplacements sont le <em>même</em> mouvement vu sous différents angles. Il suffit d'en coder un seul.</p>
+
+        <h2>Un seul mouvement, quatre directions</h2>
+        <p>J'implémente vraiment le déplacement « vers la gauche ». Les trois autres s'y ramènent par de simples transformations réversibles de la grille : une symétrie (<code>inverse</code>) ou une transposition (<code>transposer</code>).</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">logique.py</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-python"># Le SEUL vrai déplacement : tasser puis fusionner vers la gauche
+def left(game):
+    game, done = cover_up(game)          # 1. on tasse les tuiles à gauche
+    game, done = fusionner(game, done)   # 2. on fusionne les paires égales
+    game = cover_up(game)[0]             # 3. on re-tasse les trous laissés par la fusion
+    return game, done
+
+# Vers la droite = miroir horizontal, on joue "à gauche", puis on remet le miroir
+def right(game):
+    game = inverse(game)
+    game, done = cover_up(game)
+    game, done = fusionner(game, done)
+    game = cover_up(game)[0]
+    game = inverse(game)
+    return game, done
+
+# Vers le haut = on transpose (colonnes ↔ lignes), on joue "à gauche", on transpose
+def up(game):
+    game = transposer(game)
+    game, done = cover_up(game)
+    game, done = fusionner(game, done)
+    game = cover_up(game)[0]
+    game = transposer(game)
+    return game, done
+
+# Vers le bas = transposition + miroir combinés
+def down(game):
+    game = inverse(transposer(game))
+    game, done = cover_up(game)
+    game, done = fusionner(game, done)
+    game = cover_up(game)[0]
+    game = transposer(inverse(game))
+    return game, done</code></pre>
+        </div>
+
+        <div class="code-note"><strong>L'idée clé :</strong> Les quatre fonctions partagent exactement le même cœur (tasser → fusionner → tasser). Seule change la transformation qu'on applique <em>avant</em> et qu'on annule <em>après</em>. On réoriente la grille pour que le problème redevienne toujours « pousser vers la gauche ».</div>
+
+        <h2>La fusion, cœur du jeu</h2>
+        <p>Une fois les tuiles tassées à gauche, il reste à fusionner les voisines identiques. La règle du 2048 : on parcourt de gauche à droite, et deux tuiles égales et non nulles fusionnent en doublant la première.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">logique.py</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-python">def fusionner(mat, done):
+    for i in range(c.GRID_LEN):
+        for j in range(c.GRID_LEN - 1):
+            # deux voisines identiques et non nulles ne fusionnent qu'une fois
+            if mat[i][j] == mat[i][j + 1] and mat[i][j] != 0:
+                mat[i][j] *= 2          # la gauche double
+                mat[i][j + 1] = 0       # la droite se vide
+                done = True             # un mouvement a bien eu lieu
+    return mat, done</code></pre>
+        </div>
+
+        <div class="code-note"><strong>À retenir :</strong> Le drapeau <code>done</code> qui remonte de fonction en fonction n'est pas décoratif : il indique si le coup a réellement modifié la grille. C'est lui qui décide s'il faut faire apparaître une nouvelle tuile, car en 2048 une tuile n'apparaît qu'après un mouvement valide.</div>
+
+        <h2>Ce que j'en retiens</h2>
+        <p>Ce projet, réalisé en fin de Terminale, est celui qui m'a fait aimer l'algorithmique. Il montre qu'un bon raisonnement en amont, ici factoriser quatre problèmes en un seul, vaut mieux que du code répété. Manipuler des matrices et faire circuler un état entre les fonctions : ces réflexes me servent encore.</p>
+        <div class="chips">
+          <span class="chip">Python</span><span class="chip">Matrices</span><span class="chip">Factorisation</span><span class="chip">Logique de jeu</span><span class="chip">Raisonnement algorithmique</span>
+        </div>
+      </div>
+
+      <div class="hero-actions reveal" style="margin-top:52px;">
+        <a href="../index.html#projets" class="btn btn-primary">← Retour aux projets</a>
+        <a href="../about.html" class="btn btn-ghost">Qui je suis</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="muted">© 2026 Théo Springer</span>
+      <div class="socials">
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:theo.springer.iut@gmail.com">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>
