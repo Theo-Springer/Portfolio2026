@@ -1,4 +1,4 @@
-# Portfolio — Théo Springer
+# Portfolio - Théo Springer
 
 Portfolio personnel développé en HTML, CSS et JavaScript, sans framework. Thème sombre, multi-pages, avec une étude de cas et des extraits de code commentés pour chaque projet.
 
