@@ -47,8 +47,14 @@ body::before {
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(1200px 600px at 50% -10%, rgba(143,163,176,0.06), transparent 60%),
-    radial-gradient(900px 500px at 100% 100%, rgba(143,163,176,0.04), transparent 55%);
+    radial-gradient(1100px 820px at 50% 40%, rgba(188,208,224,0.22), transparent 60%),
+    radial-gradient(680px 460px at 88% 4%, rgba(143,163,176,0.07), transparent 60%),
+    radial-gradient(900px 520px at 8% 104%, rgba(143,163,176,0.06), transparent 60%);
+  animation: halo 9s ease-in-out infinite;
+}
+@keyframes halo {
+  0%, 100% { opacity: .9; }
+  50%      { opacity: 1; }
 }
 
 .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; position: relative; z-index: 1; }
@@ -283,4 +289,5 @@ footer .muted { color: var(--dim); font-size: .86rem; font-family: var(--mono); 
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
   html { scroll-behavior: auto; }
+  body::before { animation: none; }
 }
