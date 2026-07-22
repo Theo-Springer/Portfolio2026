@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relansio — Théo Springer</title>
+  <meta name="description" content="Étude de cas : Relansio, un SaaS de relance automatique de factures impayées (Next.js, Supabase, Stripe).">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="wrap nav-inner">
+      <a href="../index.html" class="brand"><span class="dot"></span>Théo Springer</a>
+      <div class="nav-links">
+        <a href="../index.html">Accueil</a>
+        <a href="../index.html#projets">Projets</a>
+        <a href="../about.html">À propos</a>
+        <a href="../parcours.html">Parcours</a>
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener" class="nav-cta">GitHub ↗</a>
+      </div>
+      <button class="burger" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="article">
+    <div class="wrap">
+      <a href="../index.html#projets" class="back-link mono">← Tous les projets</a>
+
+      <div class="reveal">
+        <span class="kicker mono">// PROJET 01 · SAAS EN PRODUCTION</span>
+        <h1>Relansio</h1>
+        <p class="subtitle">Un SaaS qui relance automatiquement les factures impayées des freelances. Abonnement à 19 €/mois, paiement Stripe, envoi des relances par email sans intervention.</p>
+      </div>
+
+      <div class="meta-bar reveal">
+        <div class="item"><div class="k">Stack</div><div class="v">Next.js 14 · TypeScript · Supabase · Stripe</div></div>
+        <div class="item"><div class="k">Rôle</div><div class="v">Conception & développement full-stack</div></div>
+        <div class="item"><div class="k">Périmètre</div><div class="v">Auth · paiement · cron · CRM</div></div>
+        <div class="item"><div class="k">Liens</div><div class="v"><a href="https://relansio.vercel.app/" target="_blank" rel="noopener" class="accent">Démo ↗</a> · <a href="https://github.com/Theo-Springer/relansio" target="_blank" rel="noopener" class="accent">Code ↗</a></div></div>
+      </div>
+
+      <div class="prose reveal">
+        <h2>Le projet</h2>
+        <p>Relancer un client qui ne paie pas, c'est pénible et on remet toujours ça à plus tard. Relansio le fait à la place du freelance : on ajoute ses factures, l'outil détecte celles en retard et envoie les relances par email, tout seul, à la bonne cadence. C'est mon projet le plus complet, celui qui touche à tout ce qu'un vrai SaaS demande.</p>
+        <p>La partie technique couvre l'authentification, un abonnement payant via Stripe (avec webhook pour synchroniser le statut), une base Supabase protégée par des règles d'accès par utilisateur, et surtout une tâche planifiée qui tourne chaque jour pour envoyer les relances arrivées à échéance. Le cœur du produit, c'est cette automatisation.</p>
+
+        <h2>La logique de relance</h2>
+        <p>J'ai isolé toute la logique métier dans un fichier de fonctions pures : pas de réseau, pas de base de données, juste des entrées et des sorties. Cette partie fabrique le texte d'une relance à partir d'une facture et d'un niveau, et gère l'escalade en trois paliers : rappel courtois, relance ferme, puis mise en demeure.</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">src/lib/reminders.ts</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-typescript">// Trois niveaux de relance. Après la mise en demeure (niveau 3),
+// plus aucune relance automatique : la fonction renvoie null.
+export function nextReminderDate(level: number, delayDays: number): string | null {
+  if (level >= 3) return null;
+  return new Date(Date.now() + delayDays * 86_400_000).toISOString().slice(0, 10);
+}
+
+// Remplit un modèle ({client}, {montant}, {jours_retard}…) et renvoie l'email.
+export function buildReminder(inv, level, senderName, templates): ReminderEmail {
+  const vars = {
+    client:         inv.client_name,
+    numero_facture: inv.invoice_number,
+    montant:        formatAmount(Number(inv.amount), inv.currency),
+    date_echeance:  formatDate(inv.due_date),
+    jours_retard:   String(daysOverdue(inv.due_date)),
+    votre_nom:      senderName,
+  };
+
+  const tpl = templates?.[String(level)] ?? DEFAULT_TEMPLATES[level];
+
+  return {
+    // Un objet d'email ne contient jamais de saut de ligne : protection
+    // contre l'injection d'en-têtes.
+    subject: render(tpl.subject, vars).replace(/[\r\n]+/g, " ").trim(),
+    body:    render(tpl.body, vars),
+  };
+}</code></pre>
+        </div>
+
+        <div class="code-note"><strong>À retenir :</strong> garder cette logique « pure » la rend simple à tester et réutilisable partout — envoi manuel, cron automatique et compte de démo l'appellent tous. Le nettoyage des sauts de ligne dans l'objet de l'email est un petit détail de sécurité qui évite qu'un nom de client malveillant injecte des en-têtes dans le message.</div>
+
+        <h2>Le cœur : l'envoi automatique</h2>
+        <p>Chaque jour à 8 h, Vercel appelle cette route. Elle cherche les factures dont la relance est arrivée à échéance et les traite une par une, en respectant plusieurs règles métier : ne rien envoyer si le client est en relance manuelle, si l'abonnement n'est plus actif, ou s'il s'agit d'une mise en demeure (jamais automatique).</p>
+
+        <div class="code-block">
+          <div class="code-head"><span class="file mono">src/app/api/cron/reminders/route.ts</span><span class="dots"><span></span><span></span><span></span></span></div>
+          <pre><code class="language-typescript">// Comparaison en temps constant : ne laisse fuir ni la longueur
+// ni le préfixe du secret face à une attaque par mesure du temps.
+function isAuthorized(header: string | null, secret: string): boolean {
+  const expected = Buffer.from(`Bearer ${secret}`);
+  const received = Buffer.from(header ?? "");
+  return expected.length === received.length &amp;&amp; timingSafeEqual(expected, received);
+}
+
+export async function GET(req: Request) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || !isAuthorized(req.headers.get("authorization"), secret)) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Factures impayées, pas encore au niveau 2, dont la relance est due
+  const { data: invoices } = await supabase.from("invoices").select("*")
+    .eq("status", "unpaid")
+    .lt("reminder_level", 2)
+    .lte("next_reminder_at", today)
+    .limit(100);
+
+  for (const invoice of invoices ?? []) {
+    if (client?.auto_remind === false) { skipped++; continue; }          // relance manuelle
+    if (!(await hasActiveSubscription(invoice.user_id))) { skipped++; continue; }  // plus abonné
+
+    const level = invoice.reminder_level + 1;         // jamais 3 : la mise en demeure est manuelle
+    const email = buildReminder(invoice, level, senderName, templates);
+    await sendEmail({ to: invoice.client_email, subject: email.subject, text: email.body });
+
+    // On avance le niveau et on planifie la relance suivante
+    await supabase.from("invoices").update({
+      reminder_level:  level,
+      next_reminder_at: nextReminderDate(level, delayDays),
+    }).eq("id", invoice.id);
+
+    sent++;
+  }
+
+  return NextResponse.json({ sent, skipped });
+}</code></pre>
+        </div>
+
+        <div class="code-note"><strong>Le raisonnement :</strong> une tâche automatique n'a pas d'utilisateur derrière elle, donc je la protège par un secret comparé en temps constant plutôt qu'avec un simple <code>===</code>, qui pourrait révéler des indices sur le secret. La boucle vérifie l'abonnement et la cadence de chaque facture avant d'envoyer, et remet à jour le niveau et la date de la prochaine relance pour que le lendemain reprenne exactement là où il faut.</div>
+
+        <h2>Sécurité et paiement</h2>
+        <p>Comme l'application gère de l'argent et des données clients, la sécurité passe avant le reste. Chaque table Supabase a ses règles d'accès (RLS) : un utilisateur ne voit jamais que ses propres factures. La table des abonnements n'est modifiable que par le webhook Stripe, jamais par le client. Et l'abonnement est vérifié deux fois — à l'ouverture du dashboard côté serveur, puis à chaque appel d'API — pour qu'aucune route payante ne soit accessible sans payer.</p>
+
+        <h2>Ce que j'en retiens</h2>
+        <p>Relansio m'a fait construire un produit de bout en bout : inscription, paiement récurrent, synchronisation via webhook, tâche planifiée, envoi d'emails avec pièces jointes, et un CRM avec import CSV. C'est le projet qui m'a le plus appris sur ce que veut dire « mettre un vrai SaaS en production » — pas juste écrire du code, mais penser sécurité, argent et automatisation en même temps.</p>
+        <div class="chips">
+          <span class="chip">Next.js 14</span><span class="chip">TypeScript</span><span class="chip">Supabase / RLS</span><span class="chip">Stripe (abonnement + webhook)</span><span class="chip">Cron Vercel</span><span class="chip">Resend (email)</span><span class="chip">Sécurité</span>
+        </div>
+      </div>
+
+      <div class="hero-actions reveal" style="margin-top:52px;">
+        <a href="rewind-insights.html" class="btn btn-primary">Projet suivant : Rewind Insights →</a>
+        <a href="../index.html#projets" class="btn btn-ghost">Tous les projets</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot-inner">
+      <span class="muted">© 2026 Théo Springer</span>
+      <div class="socials">
+        <a href="https://github.com/Theo-Springer" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:theo.springer.iut@gmail.com">Email</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+</body>
+</html>

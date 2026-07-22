@@ -9,7 +9,7 @@ Portfolio personnel développé en HTML, CSS et JavaScript, sans framework. Thè
 - Landing page épurée avec une sélection de projets
 - Page **À propos** : profil, stack maîtrisée et utilisée, répartition des langages
 - Page **Parcours** : formation (BTS NDRC) et objectifs (BUT Informatique / BTS SIO)
-- Cinq études de cas projet, chacune avec des traces de code réelles et leurs explications
+- Six études de cas projet, chacune avec des traces de code réelles et leurs explications
 
 ## Structure
 
@@ -19,6 +19,7 @@ Portfolio personnel développé en HTML, CSS et JavaScript, sans framework. Thè
 ├── about.html            # Qui je suis
 ├── parcours.html         # Plan d'études
 ├── projets/
+│   ├── relansio.html
 │   ├── rewind-insights.html
 │   ├── campuslocal.html
 │   ├── crestfall.html
